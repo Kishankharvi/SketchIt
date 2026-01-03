@@ -1,0 +1,4 @@
+com/sketchpad/canvas/DrawingCanvas.class
+com/sketchpad/file/FileService.class
+com/sketchpad/undo/UndoManager.class
+com/sketchpad/MainApp.class
