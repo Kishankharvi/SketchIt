@@ -31,13 +31,17 @@ public class MainApp extends Application {
         redoBtn.setOnAction(e->drawingCanvas.redo());
 
         clearBtn.setOnAction(e -> drawingCanvas.clear());
-        textBtn.setOnAction(e->textMode=true);
+        textBtn.setOnAction(e->{
+          drawingCanvas.enableTextMode();
+          drawingCanvas.getCanvas().requestFocus();
+        });
 
         colorPicker.setOnAction(e -> drawingCanvas.setColor(colorPicker.getValue()));
 
 
 
 //new codes for texts
+/*
 drawingCanvas.getCanvas().setOnMouseClicked(e->{
   if(textMode){
   TextInputDialog dialog =new TextInputDialog();
@@ -52,8 +56,7 @@ drawingCanvas.getCanvas().setOnMouseClicked(e->{
   textMode =false;
 }
     });
-
-
+*/
 
 
 
@@ -68,7 +71,7 @@ drawingCanvas.getCanvas().setOnMouseClicked(e->{
         ToolBar toolBar = new ToolBar(undoBtn,redoBtn, clearBtn,textBtn, colorPicker);
 
         MenuItem saveItem = new MenuItem("Save");
-        Menu fileMenu = new Menu("File", null, saveItem);
+        Menu fileMenu = new Menu("File");
         fileMenu.getItems().add(saveItem);
         MenuBar menuBar = new MenuBar(fileMenu);
 
@@ -91,9 +94,32 @@ drawingCanvas.getCanvas().setOnMouseClicked(e->{
         root.setTop(new VBox(menuBar, toolBar));
         root.setCenter(drawingCanvas.getCanvas());
 
+        
+        Scene scene = new Scene(root);   
+
+        // Keyboard input for text typing
+        scene.setOnKeyTyped(e -> {
+            String ch = e.getCharacter();
+            if (ch.length() > 0 && ch.charAt(0) >= 32) {
+                drawingCanvas.handleKeyTyped(ch);
+            }
+        });
+
+        scene.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case BACK_SPACE -> drawingCanvas.handleBackspace();
+                case ENTER -> drawingCanvas.commitText();
+                case ESCAPE -> drawingCanvas.cancelText();
+            }
+        });
+
+
         stage.setTitle("SketchPad");
-        stage.setScene(new Scene(root));
+        stage.setScene(scene);
         stage.show();
+        drawingCanvas.getCanvas().setFocusTraversable(true);
+drawingCanvas.getCanvas().requestFocus();
+
     }
 
     public static void main(String[] args) {

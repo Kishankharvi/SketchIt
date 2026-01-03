@@ -9,6 +9,7 @@ public class UndoManager{
 
   public void save(WritableImage image){
     undoStack.push(image);
+    redoStack.clear();
   }
   public WritableImage undo(WritableImage current){
     if(!undoStack.isEmpty()){
