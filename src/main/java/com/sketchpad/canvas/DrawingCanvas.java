@@ -9,18 +9,25 @@ import javafx.scene.text.Font;
 
 public class DrawingCanvas {
 
-    private enum ToolMode { DRAW, TEXT }
+    public enum Tool { DRAW, TEXT, RECTANGLE, CIRCLE }
 
-    private ToolMode currentTool = ToolMode.DRAW;
+    private Tool currentTool = Tool.DRAW;
 
     private final Canvas canvas;
     private final GraphicsContext gc;
     private final UndoManager undoManager;
 
-    // Text state
+  //shared snapshot
+  private WritableImage beforeAction;
+
+    //Drawing
+    private double lastX, lastY;
+
+    //Text
     private double textX, textY;
-    private StringBuilder currentText = new StringBuilder();
-    private WritableImage beforeTextImage;
+    private StringBuilder textBuffer = new StringBuilder();
+    //shape
+    private double startX, startY;
 
     public DrawingCanvas(double width, double height) {
         canvas = new Canvas(width, height);
@@ -32,26 +39,72 @@ public class DrawingCanvas {
         gc.setFont(Font.font(20));
 
         canvas.setOnMousePressed(e -> {
-            if (currentTool == ToolMode.DRAW) {
-                undoManager.save(snapshot());
-                gc.beginPath();
-                gc.moveTo(e.getX(), e.getY());
+              
+            beforeAction=snapshot();
+            startX=e.getX();
+            startY=e.getY();
+            lastX=startX;
+            lastY=startY;
+
+
+
+
+
+
+            if (currentTool == Tool.TEXT){
+              textX=startX;
+              textY=startY;
+              textBuffer.setLength(0);
             }
+            undoManager.pushState(beforeAction);
         });
 
         canvas.setOnMouseDragged(e -> {
-            if (currentTool == ToolMode.DRAW) {
-                gc.lineTo(e.getX(), e.getY());
-                gc.stroke();
+            gc.drawImage(beforeAction,0,0);
+            switch (currentTool){
+
+              case DRAW ->{
+
+              gc.beginPath();
+              gc.moveTo(lastX,lastY);
+              gc.lineTo(e.getX(),e.getY());
+              gc.stroke();
+              lastX=e.getX();
+              lastY=e.getY();
+            }
+            case RECTANGLE ->{
+              gc.strokeRect(
+                  Math.min(startX,e.getX()),
+                  Math.min(startY,e.getY()),
+                  Math.abs(e.getX()-startX),
+                  Math.abs(e.getY()-startY)
+                  );
+            }
+            case CIRCLE ->{
+              double r=Math.hypot(e.getX()-startX,e.getY()-startY);
+              gc.strokeOval(startX-r,startY-r,r*2,r*2);
+            }
+
             }
         });
 
-        canvas.setOnMouseClicked(e -> {
-            if (currentTool == ToolMode.TEXT) {
-                textX = e.getX();
-                textY = e.getY();
-                currentText.setLength(0);
-                beforeTextImage = snapshot();
+        canvas.setOnMouseReleased(e -> {
+            if (currentTool == Tool.DRAW) return;
+            gc.drawImage(beforeAction,0,0);
+            if(currentTool==Tool.RECTANGLE){
+              gc.strokeRect(
+                
+                    Math.min(startX, e.getX()),
+                        Math.min(startY, e.getY()),
+                        Math.abs(e.getX() - startX),
+                        Math.abs(e.getY() - startY)
+                  );
+            }
+
+              if (currentTool == Tool.CIRCLE) {
+                double r = Math.hypot(e.getX() - startX, e.getY() - startY);
+                gc.strokeOval(startX - r, startY - r, r * 2, r * 2);
+            
             }
         });
     }
@@ -59,38 +112,38 @@ public class DrawingCanvas {
     /* ================= TEXT ================= */
 
     public void enableTextMode() {
-        currentTool = ToolMode.TEXT;
+        currentTool = Tool.TEXT;
     }
 
     public void handleKeyTyped(String ch) {
-        if (currentTool != ToolMode.TEXT) return;
-        currentText.append(ch);
+        if (currentTool != Tool.TEXT) return;
+        textBuffer.append(ch);
         redrawTextPreview();
     }
 
     public void handleBackspace() {
-        if (currentTool != ToolMode.TEXT || currentText.length() == 0) return;
-        currentText.deleteCharAt(currentText.length() - 1);
+        if (currentTool != Tool.TEXT || textBuffer.length() == 0) return;
+        textBuffer.deleteCharAt(textBuffer.length() - 1);
         redrawTextPreview();
     }
 
     public void commitText() {
-        if (currentTool != ToolMode.TEXT) return;
-        undoManager.save(beforeTextImage);
-        gc.drawImage(beforeTextImage, 0, 0);
-        gc.fillText(currentText.toString(), textX, textY);
-        currentTool = ToolMode.DRAW;
+        if (currentTool != Tool.TEXT) return;
+      
+        gc.drawImage(beforeAction, 0, 0);
+        gc.fillText(textBuffer.toString(), textX, textY);
+        currentTool = Tool.DRAW;
     }
 
     public void cancelText() {
-        if (currentTool != ToolMode.TEXT) return;
-        gc.drawImage(beforeTextImage, 0, 0);
-        currentTool = ToolMode.DRAW;
+        if (currentTool != Tool.TEXT) return;
+        gc.drawImage(beforeAction, 0, 0);
+        currentTool = Tool.DRAW;
     }
 
     private void redrawTextPreview() {
-        gc.drawImage(beforeTextImage, 0, 0);
-        gc.fillText(currentText.toString(), textX, textY);
+        gc.drawImage(beforeAction, 0, 0);
+        gc.fillText(textBuffer.toString(), textX, textY);
     }
 
     /* ================= UNDO / REDO ================= */
@@ -111,6 +164,9 @@ public class DrawingCanvas {
         gc.setStroke(color);
         gc.setFill(color);
     }
+public  void setTool(Tool tool){
+  currentTool=tool;
+}
 
     public void clear() {
         gc.setFill(Color.WHITE);

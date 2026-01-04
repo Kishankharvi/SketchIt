@@ -1,4 +1,4 @@
-package com.sketchpad;
+ package com.sketchpad;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -24,6 +24,8 @@ public class MainApp extends Application {
         Button redoBtn = new Button("Redo");
         Button clearBtn = new Button("Clear");
         Button textBtn =new Button("Text");
+        Button rectBtn = new Button("Rectangle");
+Button circleBtn = new Button("Circle");
 
         ColorPicker colorPicker = new ColorPicker(Color.BLACK);
 
@@ -38,7 +40,12 @@ public class MainApp extends Application {
 
         colorPicker.setOnAction(e -> drawingCanvas.setColor(colorPicker.getValue()));
 
-
+rectBtn.setOnAction(e -> drawingCanvas.setTool(DrawingCanvas.Tool.RECTANGLE));
+circleBtn.setOnAction(e -> drawingCanvas.setTool(DrawingCanvas.Tool.CIRCLE));
+textBtn.setOnAction(e -> {
+    drawingCanvas.setTool(DrawingCanvas.Tool.TEXT);
+    drawingCanvas.getCanvas().requestFocus();
+});
 
 //new codes for texts
 /*

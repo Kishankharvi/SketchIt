@@ -7,23 +7,23 @@ public class UndoManager{
   private final Stack<WritableImage> undoStack =new Stack<>();
   private final Stack<WritableImage> redoStack =new Stack<>();
 
-  public void save(WritableImage image){
+  public void pushState(WritableImage image){
     undoStack.push(image);
     redoStack.clear();
   }
   public WritableImage undo(WritableImage current){
-    if(!undoStack.isEmpty()){
+    if(undoStack.isEmpty()) return null;
       redoStack.push(current);
       return undoStack.pop();
-    }
-  return null;
+    
+
   }
 
   public WritableImage redo(WritableImage current){
-    if(!redoStack.isEmpty()){
+    if(redoStack.isEmpty()) return null;
       undoStack.push(current);
       return redoStack.pop();
-    }
-    return null;
+    
+    
   }
 }

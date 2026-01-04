@@ -1,6 +1,7 @@
+com/sketchpad/canvas/DrawingCanvas$1.class
 com/sketchpad/MainApp$1.class
+com/sketchpad/canvas/DrawingCanvas$Tool.class
 com/sketchpad/canvas/DrawingCanvas.class
 com/sketchpad/file/FileService.class
-com/sketchpad/undo/UndoManager.class
 com/sketchpad/MainApp.class
-com/sketchpad/canvas/DrawingCanvas$ToolMode.class
+com/sketchpad/undo/UndoManager.class
